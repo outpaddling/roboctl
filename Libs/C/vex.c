@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sysexits.h>
-#include <sys/termios.h>
+#include <termios.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 #include "roboctl.h"
@@ -203,14 +203,74 @@ void    vex_set_program_mode(rct_pic_t *pic)
 		    deassert2,
 		    assert3,
 		    deassert3;
+
+    /*
+    puts("Make sure the VEX controller is turned on.");
+    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
+    puts("Then press return...");
+    getchar();
+    */
+
     /*
      *  Using usleep() like this runs a risk of drifting from the
      *  desired times, but it's probably close enough.  The alternative
      *  is to watch the timer using getitimer() or gettimeofday().
      *
-     *  Note: RS232 uses negative logic: +5v = 0, 0v = 1
+     *  Note: RS232 uses negative logic: assert -> low, deassert -> high
      */
 
+    /*
+     *  New approach
+     */
+    
+    puts("Dropping RTS and CTS...");
+    /* Everything low except TD before beginning the prog init sequence */
+    //assert_pin(pic->fd, TIOCM_LE);
+    //assert_pin(pic->fd, TIOCM_DTR);
+    //assert_pin(pic->fd, TIOCM_DSR);
+    assert_pin(pic->fd, TIOCM_RTS);
+    //deassert_pin(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
+    //assert_pin(pic->fd, TIOCM_SR);      /* Is this the same as TR? */
+    assert_pin(pic->fd, TIOCM_CTS);
+    //assert_pin(pic->fd, TIOCM_DCD);
+    //assert_pin(pic->fd, TIOCM_RI);
+    getchar();
+    
+    usleep(500000);
+    
+    puts("Raising RTS and CTS...");
+    /* Begin sequence by raising RTS and CTS at the same time */
+    deassert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
+    //deassert_pin(pic->fd, TIOCM_CTS);
+    getchar();
+
+#if 0
+    /* Raise RD after 16.7ms for 1/2 ms */
+    usleep(16700);
+    deassert_pin(pic->fd, TIOCM_SR);    /* Is this the same as RD? */
+    usleep(500);
+    assert_pin(pic->fd, TIOCM_SR);    /* Is this the same as RD? */
+#endif
+
+    /* Drop RTS after 38.8ms */
+    usleep(21600);
+    assert_pin(pic->fd, TIOCM_RTS);
+    
+    /* Drop CTS after 64.4ms */
+    usleep(25600);
+    assert_pin(pic->fd, TIOCM_CTS);
+    
+    /* Drop TD after 143.5ms */
+    assert_pin(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
+    
+    usleep(1000000);
+    
+    return;
+    
+    /*
+     *  Old attempts
+     */
+    
     /* 
      *  Start both RTS and DTR in a low state for an arbitrary period.
      *  0.1 seconds is not enough.  This caused FreeBSD 7.0 to fail
@@ -218,6 +278,8 @@ void    vex_set_program_mode(rct_pic_t *pic)
      */
     assert_pin(pic->fd, TIOCM_DTR);
     assert_pin(pic->fd, TIOCM_RTS);
+    getchar();
+    
     usleep(250000);
     
     gettimeofday(&assert1,NULL);
@@ -282,11 +344,6 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
 {
     int     status;
 
-    puts("Make sure the VEX controller is turned on.");
-    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
-    puts("Then press return...");
-    getchar();
-
     if ( (status = pic_open_controller(pic,device)) != RCT_OK )
 	return status;
 
@@ -303,7 +360,7 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
     }
 
     // Not yet working reliably or at all on some platforms.
-    // vex_set_program_mode(pic);
+    vex_set_program_mode(pic);
     
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
        into programming mode, as if the dongle button had been pressed.
@@ -312,7 +369,7 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
 
 #ifndef __FreeBSD__
-    deassert_pin(pic->fd,TIOCM_RTS);
+    //deassert_pin(pic->fd,TIOCM_RTS);
 #endif
     //deassert_pin(pic->fd,TIOCM_DTR);
     
