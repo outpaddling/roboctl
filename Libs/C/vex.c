@@ -203,7 +203,8 @@ void    vex_set_program_mode(rct_pic_t *pic)
 		    deassert2,
 		    assert3,
 		    deassert3;
-
+    char    buff[2] = "\377";
+    
     /*
     puts("Make sure the VEX controller is turned on.");
     puts("Press the button on the programming module until the PGRM STATUS button flashes.");
@@ -223,29 +224,38 @@ void    vex_set_program_mode(rct_pic_t *pic)
      *  New approach
      */
     
-    puts("Dropping RTS and CTS...");
+    //puts("Dropping RTS and CTS...");
     /* Everything low except TD before beginning the prog init sequence */
     //assert_pin(pic->fd, TIOCM_LE);
     //assert_pin(pic->fd, TIOCM_DTR);
     //assert_pin(pic->fd, TIOCM_DSR);
-    assert_pin(pic->fd, TIOCM_RTS);
-    //deassert_pin(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
-    //assert_pin(pic->fd, TIOCM_SR);      /* Is this the same as TR? */
+    assert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
     assert_pin(pic->fd, TIOCM_CTS);
+    //deassert_pin(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
+    //assert_pin(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
     //assert_pin(pic->fd, TIOCM_DCD);
     //assert_pin(pic->fd, TIOCM_RI);
-    getchar();
+    //getchar();
     
-    usleep(500000);
     
-    puts("Raising RTS and CTS...");
+    usleep(250000);
+    
+    /* Raise TD? */
+    // Causes auto-trigger to work the second time after a reboot of
+    // the controller.  The first try just hangs
+    write(pic->fd, buff, 1);
+    
+    usleep(250000);
+    
+    //puts("Raising RTS and CTS...");
     /* Begin sequence by raising RTS and CTS at the same time */
     deassert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
     //deassert_pin(pic->fd, TIOCM_CTS);
-    getchar();
+    //getchar();
 
 #if 0
     /* Raise RD after 16.7ms for 1/2 ms */
+    /* Duh: controller raises RD, not us. */
     usleep(16700);
     deassert_pin(pic->fd, TIOCM_SR);    /* Is this the same as RD? */
     usleep(500);
@@ -263,7 +273,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
     /* Drop TD after 143.5ms */
     assert_pin(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
-    usleep(1000000);
+    usleep(250000);
     
     return;
     
@@ -360,6 +370,9 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
     }
 
     // Not yet working reliably or at all on some platforms.
+    // Call twice, since it doesn't work the first time after a reboot
+    // of the controller
+    vex_set_program_mode(pic);
     vex_set_program_mode(pic);
     
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
