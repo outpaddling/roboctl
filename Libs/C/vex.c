@@ -230,7 +230,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
     //assert_pin(pic->fd, TIOCM_DTR);
     //assert_pin(pic->fd, TIOCM_DSR);
     assert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
-    assert_pin(pic->fd, TIOCM_CTS);
+    //assert_pin(pic->fd, TIOCM_CTS);
     //deassert_pin(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
     //assert_pin(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
     //assert_pin(pic->fd, TIOCM_DCD);
@@ -253,24 +253,17 @@ void    vex_set_program_mode(rct_pic_t *pic)
     //deassert_pin(pic->fd, TIOCM_CTS);
     //getchar();
 
-#if 0
-    /* Raise RD after 16.7ms for 1/2 ms */
-    /* Duh: controller raises RD, not us. */
-    usleep(16700);
-    deassert_pin(pic->fd, TIOCM_SR);    /* Is this the same as RD? */
-    usleep(500);
-    assert_pin(pic->fd, TIOCM_SR);    /* Is this the same as RD? */
-#endif
-
-    /* Drop RTS after 38.8ms */
-    usleep(21600);
+    /* Read ack from controller? */
+    
+    /* Drop RTS */
+    usleep(25000);
     assert_pin(pic->fd, TIOCM_RTS);
     
-    /* Drop CTS after 64.4ms */
-    usleep(25600);
+    /* Drop CTS */
+    usleep(25000);
     assert_pin(pic->fd, TIOCM_CTS);
     
-    /* Drop TD after 143.5ms */
+    /* Drop TD */
     assert_pin(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
     usleep(250000);
@@ -411,6 +404,7 @@ void    vex_close_controller(rct_pic_t *pic)
     serial_eat_leftovers(pic->fd);
     
     // There might be something else we need to do here.  Stay tuned...
+    assert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
     pic_close_controller(pic);
 }
 
