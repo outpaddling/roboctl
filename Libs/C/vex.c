@@ -162,22 +162,24 @@ int     vex_valid_program_range(unsigned long start_address,
 }
 
 
-void    deassert_pin(int fd,int pin_mask)
+void    rs232_high(int fd,int pin_mask)
 
 {
     int     state;
     
+    /* RS232 uses negative logic: Set state bit to 0 to set the line to 1. */
     ioctl(fd, TIOCMGET, &state);
     state &= ~pin_mask;
     ioctl(fd, TIOCMSET, &state);
 }
 
 
-void    assert_pin(int fd,int pin_mask)
+void    rs232_low(int fd,int pin_mask)
 
 {
     int     state;
     
+    /* RS232 uses negative logic: Set state bit to 1 to set the line to 0. */
     ioctl(fd, TIOCMGET, &state);
     state |= pin_mask;
     ioctl(fd, TIOCMSET, &state);
@@ -227,15 +229,15 @@ void    vex_set_program_mode(rct_pic_t *pic)
 #if 0
     //puts("Dropping RTS and CTS...");
     /* Everything low except TD before beginning the prog init sequence */
-    //assert_pin(pic->fd, TIOCM_LE);
-    //assert_pin(pic->fd, TIOCM_DTR);
-    //assert_pin(pic->fd, TIOCM_DSR);
-    assert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
-    //assert_pin(pic->fd, TIOCM_CTS);
-    //deassert_pin(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
-    //assert_pin(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
-    //assert_pin(pic->fd, TIOCM_DCD);
-    //assert_pin(pic->fd, TIOCM_RI);
+    //rs232_low(pic->fd, TIOCM_LE);
+    //rs232_low(pic->fd, TIOCM_DTR);
+    //rs232_low(pic->fd, TIOCM_DSR);
+    rs232_low(pic->fd, TIOCM_RTS|TIOCM_CTS);
+    //rs232_low(pic->fd, TIOCM_CTS);
+    //rs232_high(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
+    //rs232_low(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
+    //rs232_low(pic->fd, TIOCM_DCD);
+    //rs232_low(pic->fd, TIOCM_RI);
     //getchar();
     
     
@@ -250,22 +252,22 @@ void    vex_set_program_mode(rct_pic_t *pic)
     
     //puts("Raising RTS and CTS...");
     /* Begin sequence by raising RTS and CTS at the same time */
-    deassert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
-    //deassert_pin(pic->fd, TIOCM_CTS);
+    rs232_high(pic->fd, TIOCM_RTS|TIOCM_CTS);
+    //rs232_high(pic->fd, TIOCM_CTS);
     //getchar();
 
     /* Read ack from controller? */
     
     /* Drop RTS */
     usleep(25000);
-    assert_pin(pic->fd, TIOCM_RTS);
+    rs232_low(pic->fd, TIOCM_RTS);
     
     /* Drop CTS */
     usleep(25000);
-    assert_pin(pic->fd, TIOCM_CTS);
+    rs232_low(pic->fd, TIOCM_CTS);
     
     /* Drop TD */
-    assert_pin(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
+    rs232_low(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
     usleep(250000);
     
@@ -280,57 +282,57 @@ void    vex_set_program_mode(rct_pic_t *pic)
      *  0.1 seconds is not enough.  This caused FreeBSD 7.0 to fail
      *  sometimes.
      */
-    assert_pin(pic->fd, TIOCM_DTR);
-    assert_pin(pic->fd, TIOCM_RTS);
+    rs232_low(pic->fd, TIOCM_DTR);
+    rs232_low(pic->fd, TIOCM_RTS);
     getchar();
     
     usleep(250000);
     
     gettimeofday(&assert1,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
+    rs232_high(pic->fd, TIOCM_DTR);
     //usleep(8000);
     usleep(7000);
-    deassert_pin(pic->fd, TIOCM_RTS);
+    rs232_high(pic->fd, TIOCM_RTS);
     //usleep(156000);
     usleep(150000);
 
     gettimeofday(&deassert1,NULL);
-    assert_pin(pic->fd, TIOCM_DTR);
+    rs232_low(pic->fd, TIOCM_DTR);
     //usleep(3000);
     usleep(2000);
-    assert_pin(pic->fd, TIOCM_RTS);
+    rs232_low(pic->fd, TIOCM_RTS);
     //usleep(507000);
     usleep(500000);
     
     gettimeofday(&assert2,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
+    rs232_high(pic->fd, TIOCM_DTR);
     //usleep(10000);
     usleep(9000);
-    deassert_pin(pic->fd, TIOCM_RTS);
+    rs232_high(pic->fd, TIOCM_RTS);
     //usleep(262000);
     usleep(260000);
     
     gettimeofday(&deassert2,NULL);
-    assert_pin(pic->fd, TIOCM_DTR);
+    rs232_low(pic->fd, TIOCM_DTR);
     //usleep(3000);
     usleep(2000);
-    assert_pin(pic->fd, TIOCM_RTS);
+    rs232_low(pic->fd, TIOCM_RTS);
     //usleep(507000);
     usleep(500000);
     
     gettimeofday(&assert3,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
+    rs232_high(pic->fd, TIOCM_DTR);
     //usleep(10000);
     usleep(9000);
-    deassert_pin(pic->fd, TIOCM_RTS);
+    rs232_high(pic->fd, TIOCM_RTS);
     //usleep(25000);
     usleep(24000);
     
     gettimeofday(&deassert3,NULL);
-    assert_pin(pic->fd, TIOCM_RTS);
+    rs232_low(pic->fd, TIOCM_RTS);
     //usleep(3000);
     usleep(2000);
-    assert_pin(pic->fd, TIOCM_DTR);
+    rs232_low(pic->fd, TIOCM_DTR);
     usleep(20000); 
     
     printf("%u %lu %lu %lu %lu %lu\n",
@@ -376,9 +378,9 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
 
 #ifndef __FreeBSD__
-    //deassert_pin(pic->fd,TIOCM_RTS);
+    //rs232_high(pic->fd,TIOCM_RTS);
 #endif
-    //deassert_pin(pic->fd,TIOCM_DTR);
+    //rs232_high(pic->fd,TIOCM_DTR);
     
     /*
      *  Discard leftover characters buffered by the serial driver or
@@ -405,7 +407,6 @@ void    vex_close_controller(rct_pic_t *pic)
     serial_eat_leftovers(pic->fd);
     
     // There might be something else we need to do here.  Stay tuned...
-    assert_pin(pic->fd, TIOCM_RTS|TIOCM_CTS);
     pic_close_controller(pic);
 }
 
