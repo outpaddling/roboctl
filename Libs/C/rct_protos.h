@@ -20,7 +20,6 @@ int debug_printf(char *format, ...);
 /* get_home_dir.c */
 char *get_home_dir(char dir[], int maxlen);
 /* nxt.c */
-char    *nxt_pc_to_brick_filename(char *filename_on_pc);
 rct_status_t nxt_open_brick(rct_nxt_t *nxt);
 rct_status_t nxt_open_brick_usb(rct_nxt_t *nxt);
 rct_status_t nxt_open_brick_bluetooth(rct_nxt_t *nxt);
@@ -36,7 +35,7 @@ rct_status_t nxt_close_brick(rct_nxt_t *nxt);
 rct_status_t nxt_close_brick_usb(rct_nxt_t *nxt);
 rct_status_t nxt_close_brick_bluetooth(rct_nxt_t *nxt);
 rct_status_t nxt_validate_filename(char *filename, char *correct_ext, const char *caller);
-rct_status_t nxt_upload_file(rct_nxt_t *nxt, char *filename, rct_flag_t flags);
+rct_status_t nxt_upload_file(rct_nxt_t *nxt, char *filename_on_pc, rct_flag_t flags);
 void nxt_init_struct(rct_nxt_t *nxt);
 short buf2short(unsigned char *buf);
 void short2buf(unsigned char *buf, long val);
@@ -54,6 +53,7 @@ rct_status_t nxt_download_file(rct_nxt_t *nxt, char *file);
 rct_status_t nxt_check_response(rct_nxt_t *nxt, char *response, int bytes, int expected_bytes, char *func);
 void nxt_response_on(rct_nxt_t *nxt);
 void nxt_response_off(rct_nxt_t *nxt);
+char *nxt_pc_to_brick_filename(char *filename_on_pc);
 /* nxt_direct_cmd.c */
 rct_status_t nxt_start_program(rct_nxt_t *nxt, char *raw_filename);
 rct_status_t nxt_stop_program(rct_nxt_t *nxt);
@@ -86,9 +86,9 @@ rct_status_t nxt_delete_file(rct_nxt_t *nxt, char *filename);
 rct_status_t nxt_find_first(rct_nxt_t *nxt);
 rct_status_t nxt_find_next(rct_nxt_t *nxt);
 rct_status_t nxt_get_firmware_version(rct_nxt_t *nxt);
-rct_status_t nxt_open_file_write_linear(rct_nxt_t *nxt, char *filename, size_t size);
+rct_status_t nxt_open_file_write_linear(rct_nxt_t *nxt, char *filename_on_brick, size_t size);
 rct_status_t nxt_open_file_read_linear(rct_nxt_t *nxt);
-rct_status_t nxt_open_file_write_data(rct_nxt_t *nxt, char *filename, size_t size);
+rct_status_t nxt_open_file_write_data(rct_nxt_t *nxt, char *filename_on_brick, size_t size);
 rct_status_t nxt_open_file_append_data(rct_nxt_t *nxt);
 rct_status_t nxt_boot(rct_nxt_t *nxt);
 rct_status_t nxt_set_brick_name(rct_nxt_t *nxt);
@@ -133,16 +133,17 @@ rct_status_t rct_increase_count(rct_brick_list_t *bricks, int n);
 /* rcx.c */
 void rcx_init_struct(rct_rcx_t *rcx);
 int rcx_open_brick(rct_rcx_t *rcx);
+/* strings.c */
 /* usb.c */
 int usb_device_info(struct usb_device *dev);
 /* vex.c */
 rct_status_t vex_upload_program(rct_pic_t *pic, char *hexfile_name);
+rct_status_t vex_status(rct_pic_t *pic);
 int vex_valid_program_range(unsigned long start_address, unsigned long end_address, char *caller);
-void deassert_pin(int fd, int pin_mask);
-void assert_pin(int fd, int pin_mask);
+void rs232_high(int fd, int pin_mask);
+void rs232_low(int fd, int pin_mask);
 time_t difftimeofday(struct timeval *t1, struct timeval *t2);
 void vex_set_program_mode(rct_pic_t *pic);
 rct_status_t vex_open_controller(rct_pic_t *pic, char *device);
 void vex_close_controller(rct_pic_t *pic);
 void serial_eat_leftovers(int fd);
-
