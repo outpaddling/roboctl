@@ -117,6 +117,8 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
     }
     fclose(fp);
 
+    vex_set_program_mode(pic);
+    
     /* Erase code area */
     erase_blocks = (end_address - start_address) / PIC_ERASE_BLOCK_SIZE + 1;
     printf("Program size is %lu bytes.\n", end_address - start_address);
@@ -149,7 +151,22 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
 	    c * VEX_WRITE_CLUSTER_SIZE, write_time,
 	    c * VEX_WRITE_CLUSTER_SIZE / write_time);
     putchar('\n');
+
+    pic_return_to_user_code(pic);
     return RCT_OK;
+}
+
+
+rct_status_t    vex_status(rct_pic_t *pic)
+
+{
+    rct_status_t    status;
+    
+    vex_set_program_mode(pic);
+    status = pic_print_bootloader_version(pic);
+    pic_return_to_user_code(pic);
+    
+    return status;
 }
 
 
@@ -366,11 +383,6 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
 	exit(EX_OSERR);
     }
 
-    // Not yet working reliably or at all on some platforms.
-    // Call twice, since it doesn't work the first time after a reboot
-    // of the controller
-    vex_set_program_mode(pic);
-    
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
        into programming mode, as if the dongle button had been pressed.
        Causes FreeBSD 8.0 to fail unless --debug is used.  OK on

@@ -56,17 +56,18 @@ int     vexctl(rct_cmd_t cmd,arg_t *arg_data,unsigned int flags)
     switch(cmd)
     {
 	case    RCT_CMD_STATUS:
-	    status = pic_print_bootloader_version(&pic);
+	    status = vex_status(&pic);
 	    break;
 	case    RCT_CMD_UPLOAD:
 	    status = vex_upload_program(&pic,arg_data->filename);
+	    break;
+	case    RCT_CMD_NONE:
 	    break;
 	default:
 	    fprintf(stderr,"Internal error: Invalid command: %d.\n",cmd);
 	    fputs("This is a program bug.  Please report it to the author(s).\n",stderr);
 	    exit(EX_SOFTWARE);
     }
-    pic_return_to_user_code(&pic);
     
     if ( flags & VEX_MONITOR )
 	monitor_controller(&pic);
@@ -84,8 +85,8 @@ void    vexctl_usage(char *progname)
 
 {
     fputs("Usage:\n",stderr);
-    fprintf(stderr,"\t%s [flags] status\n",progname);
-    fprintf(stderr,"\t%s [flags] upload <filename>\n",progname);
+    fprintf(stderr,"\t%s [flags] [status]\n",progname);
+    fprintf(stderr,"\t%s [flags] [upload <filename>]\n",progname);
     fputs("\nFlags:\n",stderr);
     fputs("\t--debug        Enable debugging output.\n",stderr);
     fputs("\t--dev dev      Use serial port dev instead of the default.\n",stderr);
@@ -124,10 +125,19 @@ int     parse_args(int argc,char *argv[],rct_cmd_t *cmd,
     
     if ( *cmd == RCT_CMD_NONE )
     {
-	vexctl_usage(argv[0]);
-	return 0;   /* vexctl_usage() exits, but the compiler
-		       will complain about reaching the end of a
-		       non-void function without this return. */
+	if ( *flags & VEX_MONITOR )
+	{
+	    return RCT_OK;
+	}
+	else
+	{
+	    vexctl_usage(argv[0]);
+	    /*
+	     *  vexctl_usage() exits, but the compiler will complain about
+	     *  reaching the end of a non-void function without this return.
+	     */
+	    return RCT_OK;
+	}
     }
     else
 	return RCT_OK;
@@ -169,7 +179,12 @@ int     parse_global_flags(int argc,char *argv[],rct_cmd_t *cmd,
     }
     
     if ( arg == argc )
-	vexctl_usage(argv[0]);
+    {
+	if ( *flags & VEX_MONITOR )
+	    return RCT_OK;
+	else
+	    vexctl_usage(argv[0]);
+    }
     
     /* This is a pointer compare, not a string compare */
     if ( strcmp(arg_data->device, DEFAULT_DEV) )
