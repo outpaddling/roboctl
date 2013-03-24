@@ -197,6 +197,7 @@ time_t  difftimeofday(
 void    vex_set_program_mode(rct_pic_t *pic)
 
 {
+#if 0
     struct timeval  assert1,
 		    deassert1,
 		    assert2,
@@ -204,13 +205,12 @@ void    vex_set_program_mode(rct_pic_t *pic)
 		    assert3,
 		    deassert3;
     char    buff[2] = "\377";
-    
-    /*
+#endif
+
     puts("Make sure the VEX controller is turned on.");
     puts("Press the button on the programming module until the PGRM STATUS button flashes.");
     puts("Then press return...");
     getchar();
-    */
 
     /*
      *  Using usleep() like this runs a risk of drifting from the
@@ -223,7 +223,8 @@ void    vex_set_program_mode(rct_pic_t *pic)
     /*
      *  New approach
      */
-    
+
+#if 0
     //puts("Dropping RTS and CTS...");
     /* Everything low except TD before beginning the prog init sequence */
     //assert_pin(pic->fd, TIOCM_LE);
@@ -339,6 +340,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
        (unsigned long)difftimeofday(&deassert2,&assert1),
        (unsigned long)difftimeofday(&assert3,&assert1),
        (unsigned long)difftimeofday(&deassert3,&assert1));
+#endif
 }
 
 
@@ -365,7 +367,6 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
     // Not yet working reliably or at all on some platforms.
     // Call twice, since it doesn't work the first time after a reboot
     // of the controller
-    vex_set_program_mode(pic);
     vex_set_program_mode(pic);
     
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
