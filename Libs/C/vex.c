@@ -217,6 +217,11 @@ void    vex_set_program_mode(rct_pic_t *pic)
 
 {
 #if 0
+    puts("Make sure the VEX controller is turned on.");
+    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
+    puts("Then press return...");
+    getchar();
+#else
     struct timeval  assert1,
 		    deassert1,
 		    assert2,
@@ -224,12 +229,6 @@ void    vex_set_program_mode(rct_pic_t *pic)
 		    assert3,
 		    deassert3;
     char    buff[2] = "\377";
-#endif
-
-    puts("Make sure the VEX controller is turned on.");
-    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
-    puts("Then press return...");
-    getchar();
 
     /*
      *  Using usleep() like this runs a risk of drifting from the
@@ -243,7 +242,6 @@ void    vex_set_program_mode(rct_pic_t *pic)
      *  New approach
      */
 
-#if 0
     //puts("Dropping RTS and CTS...");
     /* Everything low except TD before beginning the prog init sequence */
     //rs232_low(pic->fd, TIOCM_LE);
@@ -287,71 +285,9 @@ void    vex_set_program_mode(rct_pic_t *pic)
     rs232_low(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
     usleep(250000);
-    
-    return;
-    
-    /*
-     *  Old attempts
-     */
-    
-    /* 
-     *  Start both RTS and DTR in a low state for an arbitrary period.
-     *  0.1 seconds is not enough.  This caused FreeBSD 7.0 to fail
-     *  sometimes.
-     */
-    rs232_low(pic->fd, TIOCM_DTR);
-    rs232_low(pic->fd, TIOCM_RTS);
-    getchar();
-    
-    usleep(250000);
-    
-    gettimeofday(&assert1,NULL);
-    rs232_high(pic->fd, TIOCM_DTR);
-    //usleep(8000);
-    usleep(7000);
-    rs232_high(pic->fd, TIOCM_RTS);
-    //usleep(156000);
-    usleep(150000);
+#endif
 
-    gettimeofday(&deassert1,NULL);
-    rs232_low(pic->fd, TIOCM_DTR);
-    //usleep(3000);
-    usleep(2000);
-    rs232_low(pic->fd, TIOCM_RTS);
-    //usleep(507000);
-    usleep(500000);
-    
-    gettimeofday(&assert2,NULL);
-    rs232_high(pic->fd, TIOCM_DTR);
-    //usleep(10000);
-    usleep(9000);
-    rs232_high(pic->fd, TIOCM_RTS);
-    //usleep(262000);
-    usleep(260000);
-    
-    gettimeofday(&deassert2,NULL);
-    rs232_low(pic->fd, TIOCM_DTR);
-    //usleep(3000);
-    usleep(2000);
-    rs232_low(pic->fd, TIOCM_RTS);
-    //usleep(507000);
-    usleep(500000);
-    
-    gettimeofday(&assert3,NULL);
-    rs232_high(pic->fd, TIOCM_DTR);
-    //usleep(10000);
-    usleep(9000);
-    rs232_high(pic->fd, TIOCM_RTS);
-    //usleep(25000);
-    usleep(24000);
-    
-    gettimeofday(&deassert3,NULL);
-    rs232_low(pic->fd, TIOCM_RTS);
-    //usleep(3000);
-    usleep(2000);
-    rs232_low(pic->fd, TIOCM_DTR);
-    usleep(20000); 
-    
+#if 0
     printf("%u %lu %lu %lu %lu %lu\n",
 	0,
        (unsigned long)difftimeofday(&deassert1,&assert1),
@@ -370,18 +306,6 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
 
     if ( (status = pic_open_controller(pic,device)) != RCT_OK )
 	return status;
-
-    /* Vex uses 115200 bits/sec, no parity, 8 data bits, 1 stop bit */
-    cfsetispeed(&pic->current_port_settings, PIC_BAUD_RATE);
-    cfsetospeed(&pic->current_port_settings, PIC_BAUD_RATE);
-    pic->current_port_settings.c_cflag |= CS8|CLOCAL|CREAD;
-    pic->current_port_settings.c_iflag |= IGNPAR;
-    if ( tcsetattr(pic->fd, TCSANOW, &pic->current_port_settings) != 0 )
-    {
-	fprintf(stderr, "%s: tcsetattr() failed: %s\n",
-	    __func__, strerror(errno));
-	exit(EX_OSERR);
-    }
 
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
        into programming mode, as if the dongle button had been pressed.
@@ -417,6 +341,9 @@ void    vex_close_controller(rct_pic_t *pic)
      *  vexctl command.  Should do this at startup as well.
      */
     serial_eat_leftovers(pic->fd);
+    
+    /* Make sure RTS and CTS are down? */
+    rs232_low(pic->fd, TIOCM_CTS|TIOCM_RTS);
     
     // There might be something else we need to do here.  Stay tuned...
     pic_close_controller(pic);

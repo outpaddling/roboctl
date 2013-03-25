@@ -359,6 +359,22 @@ rct_status_t    pic_open_controller(rct_pic_t *pic, char *device)
        intended for terminals) */
     pic->current_port_settings = pic->original_port_settings;
     cfmakeraw(&pic->current_port_settings);
+
+    /*
+     *  Vex uses 115200 bits/sec, no parity, 8 data bits, 1 stop bit
+     *  Assume same for other PIC devices for now.  Maybe add a tty
+     *  settings argument to this function later if necessary.
+     */
+    cfsetispeed(&pic->current_port_settings, PIC_BAUD_RATE);
+    cfsetospeed(&pic->current_port_settings, PIC_BAUD_RATE);
+    pic->current_port_settings.c_cflag |= CS8|CLOCAL|CREAD;
+    pic->current_port_settings.c_iflag |= IGNPAR;
+    if ( tcsetattr(pic->fd, TCSANOW, &pic->current_port_settings) != 0 )
+    {
+	fprintf(stderr, "%s: tcsetattr() failed: %s\n",
+	    __func__, strerror(errno));
+	exit(EX_OSERR);
+    }
     
     return RCT_OK;
 }
@@ -368,7 +384,9 @@ rct_status_t    pic_close_controller(rct_pic_t *pic)
 
 {
     /* Restore original port settings. */
-    if ( tcsetattr(pic->fd,TCSADRAIN,&pic->original_port_settings) != 0 )
+    /* TCSAFLUSH makes the change after output buffers are flushed and
+       discards unread input. */
+    if ( tcsetattr(pic->fd,TCSAFLUSH,&pic->original_port_settings) != 0 )
     {
 	fprintf(stderr, "%s: tcsetattr() failed: %s\n",
 	    __func__, strerror(errno));
