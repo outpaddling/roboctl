@@ -216,7 +216,7 @@ time_t  difftimeofday(
 void    vex_set_program_mode(rct_pic_t *pic)
 
 {
-#if 0
+#if 1
     puts("Make sure the VEX controller is turned on.");
     puts("Press the button on the programming module until the PGRM STATUS button flashes.");
     puts("Then press return...");
@@ -261,7 +261,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
     /* Raise TD? */
     // Causes auto-trigger to work the second time after a reboot of
     // the controller.  The first try just hangs
-    write(pic->fd, buff, 1);
+    // write(pic->fd, buff, 1);
     
     usleep(250000);
     
@@ -282,7 +282,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
     rs232_low(pic->fd, TIOCM_CTS);
     
     /* Drop TD */
-    rs232_low(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
+    // rs232_low(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
     usleep(250000);
 #endif
@@ -314,9 +314,8 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
 
 #ifndef __FreeBSD__
-    //rs232_high(pic->fd,TIOCM_RTS);
+    //rs232_high(pic->fd,TIOCM_CTS);
 #endif
-    //rs232_high(pic->fd,TIOCM_DTR);
     
     /*
      *  Discard leftover characters buffered by the serial driver or
@@ -325,8 +324,12 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
     
     /* Delay required on FreeBSD after opening port */
-    usleep(10000);
+    usleep(100000);
     
+    /*
+     *  Might be input in the buffer from a previous upload or monitor
+     *  that was unceremoniously disconnected.
+     */
     serial_eat_leftovers(pic->fd);
     
     return RCT_OK;
@@ -343,7 +346,8 @@ void    vex_close_controller(rct_pic_t *pic)
     serial_eat_leftovers(pic->fd);
     
     /* Make sure RTS and CTS are down? */
-    rs232_low(pic->fd, TIOCM_CTS|TIOCM_RTS);
+    //rs232_high(pic->fd, TIOCM_CTS);
+    //rs232_low(pic->fd, TIOCM_RTS);
     
     // There might be something else we need to do here.  Stay tuned...
     pic_close_controller(pic);

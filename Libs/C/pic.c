@@ -9,7 +9,6 @@
 #include <sys/time.h>
 #include "roboctl.h"
 
-
 /**
  *  
  */
@@ -368,6 +367,8 @@ rct_status_t    pic_open_controller(rct_pic_t *pic, char *device)
     cfsetispeed(&pic->current_port_settings, PIC_BAUD_RATE);
     cfsetospeed(&pic->current_port_settings, PIC_BAUD_RATE);
     pic->current_port_settings.c_cflag |= CS8|CLOCAL|CREAD;
+    pic->current_port_settings.c_cflag &= ~CRTSCTS;
+    //pic->current_port_settings.c_cflag &= ~(CCTS_OFLOW|CRTSCTS|CRTS_IFLOW|HUPCL);
     pic->current_port_settings.c_iflag |= IGNPAR;
     if ( tcsetattr(pic->fd, TCSANOW, &pic->current_port_settings) != 0 )
     {
@@ -392,6 +393,7 @@ rct_status_t    pic_close_controller(rct_pic_t *pic)
 	    __func__, strerror(errno));
 	exit(EX_OSERR);
     }
+
     close(pic->fd);
     return RCT_OK;
 }
