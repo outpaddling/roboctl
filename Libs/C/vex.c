@@ -248,7 +248,6 @@ void    vex_set_program_mode(rct_pic_t *pic)
     //rs232_low(pic->fd, TIOCM_DTR);
     //rs232_low(pic->fd, TIOCM_DSR);
     rs232_low(pic->fd, TIOCM_RTS|TIOCM_CTS);
-    //rs232_low(pic->fd, TIOCM_CTS);
     //rs232_high(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
     //rs232_low(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
     //rs232_low(pic->fd, TIOCM_DCD);
