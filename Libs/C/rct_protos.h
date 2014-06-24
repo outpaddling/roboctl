@@ -28,7 +28,7 @@ rct_status_t nxt_print_device_info(rct_nxt_t *nxt);
 rct_status_t nxt_print_firmware_version(rct_nxt_t *nxt);
 int nxt_send_simple_cmd(rct_nxt_t *nxt, int cmd_type, int cmd, char *response, int response_max);
 int nxt_send_cmd(rct_nxt_t *nxt, int cmd_type, int cmd, char *response, int response_max, char *format, ...);
-rct_status_t nxt_send_buf(rct_nxt_t *nxt, char *buf, int len);
+int nxt_send_buf(rct_nxt_t *nxt, char *buf, int len);
 rct_status_t nxt_send_str(rct_nxt_t *nxt, char *str);
 rct_status_t nxt_recv_buf(rct_nxt_t *nxt, char *buf, int maxlen);
 rct_status_t nxt_close_brick(rct_nxt_t *nxt);

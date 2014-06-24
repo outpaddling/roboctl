@@ -47,7 +47,7 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
 		    write_blocks,
 		    blocks_per_write;
     int             val,
-		    checksum;
+		    checksum = 0;
     extern int      Debug; 
     struct timeval  tp_start,tp_stop;   /* Time the upload and report speed */
     double          write_time;

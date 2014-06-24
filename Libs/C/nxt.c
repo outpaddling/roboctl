@@ -306,6 +306,7 @@ int nxt_send_cmd(rct_nxt_t * nxt, int cmd_type, int cmd, char *response,
     if ( !NXT_IS_OPEN(nxt) )
     {
 	fputs("nxt_send_cmd(): Error: NXT is not currently open.\n",stderr);
+	bytes = 0;
     }
     else
     {
@@ -359,6 +360,7 @@ int nxt_send_cmd(rct_nxt_t * nxt, int cmd_type, int cmd, char *response,
 	    fprintf(stderr, 
 		    "nxt_send_cmd(): Error: Failed to send command %d:%d.\n",
 		    cmd_type,cmd);
+	    bytes = 0;
 	}
     }
     return bytes;
@@ -374,7 +376,7 @@ int nxt_send_cmd(rct_nxt_t * nxt, int cmd_type, int cmd, char *response,
  * Author: Jason W. Bacon
  ***************************************************************************/
 
-rct_status_t nxt_send_buf(rct_nxt_t * nxt, char *buf, int len)
+int     nxt_send_buf(rct_nxt_t * nxt, char *buf, int len)
 
 {
     int     bytes;

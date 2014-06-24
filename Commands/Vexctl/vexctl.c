@@ -62,6 +62,7 @@ int     vexctl(rct_cmd_t cmd,arg_t *arg_data,unsigned int flags)
 	    status = vex_upload_program(&pic,arg_data->filename);
 	    break;
 	case    RCT_CMD_NONE:
+	    status = RCT_OK;
 	    break;
 	default:
 	    fprintf(stderr,"Internal error: Invalid command: %d.\n",cmd);
