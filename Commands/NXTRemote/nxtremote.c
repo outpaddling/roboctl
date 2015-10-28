@@ -136,20 +136,20 @@ void    control_motion(rct_brick_t *brick,int x,int y,settings_t *settings)
     int     left_speed,
 	    right_speed;
     
-    //arcade_drive(x, y, 100, 100, 4.5f, &left_speed, &right_speed);
+    arcade_drive(x, y, 100, 100, 4.5f, &left_speed, &right_speed);
     
     /* Scale down according to settings */
-    //left_speed = left_speed * settings->wheel_power / 100;
-    //right_speed = right_speed * settings->wheel_power / 100;
+    left_speed = -left_speed * settings->wheel_power / 100;
+    right_speed = -right_speed * settings->wheel_power / 100;
     
     printf("Joystick: %4d %4d   Power: %4d %4d  ",
 	    x,y,left_speed,right_speed);
     fflush(stdout);
     
-    nxt_set_output_state(&(brick->nxt),DRIVE_MOTOR_PORT,y,
+    nxt_set_output_state(&(brick->nxt),DRIVE_MOTOR_PORT, left_speed,
 	NXT_MODE_MOTORON,NXT_REGULATION_MODE_IDLE,
 	0,NXT_RUN_STATE_RUNNING,0);
-    nxt_set_output_state(&(brick->nxt),STEER_MOTOR_PORT,-x,
+    nxt_set_output_state(&(brick->nxt),STEER_MOTOR_PORT, right_speed,
 	NXT_MODE_MOTORON,NXT_REGULATION_MODE_IDLE,
 	0,NXT_RUN_STATE_RUNNING,0);
 }
