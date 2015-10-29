@@ -139,8 +139,8 @@ void    control_motion(rct_brick_t *brick,int x,int y,settings_t *settings)
     arcade_drive(x, y, 100, 100, 4.5f, &left_speed, &right_speed);
     
     /* Scale down according to settings */
-    left_speed = -left_speed * settings->wheel_power / 100;
-    right_speed = -right_speed * settings->wheel_power / 100;
+    left_speed = left_speed * settings->wheel_power / 100;
+    right_speed = right_speed * settings->wheel_power / 100;
     
     printf("Joystick: %4d %4d   Power: %4d %4d  ",
 	    x,y,left_speed,right_speed);
