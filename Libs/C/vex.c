@@ -5,7 +5,7 @@
 #include <unistd.h>
 #include <sys/time.h>
 #include <sysexits.h>
-#include <sys/termios.h>
+#include <termios.h>
 #include <sys/ioctl.h>
 #include <errno.h>
 #include "roboctl.h"
@@ -47,7 +47,7 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
 		    write_blocks,
 		    blocks_per_write;
     int             val,
-		    checksum;
+		    checksum = 0;
     extern int      Debug; 
     struct timeval  tp_start,tp_stop;   /* Time the upload and report speed */
     double          write_time;
@@ -117,6 +117,8 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
     }
     fclose(fp);
 
+    vex_set_program_mode(pic);
+    
     /* Erase code area */
     erase_blocks = (end_address - start_address) / PIC_ERASE_BLOCK_SIZE + 1;
     printf("Program size is %lu bytes.\n", end_address - start_address);
@@ -149,7 +151,22 @@ rct_status_t    vex_upload_program(rct_pic_t *pic, char *hexfile_name)
 	    c * VEX_WRITE_CLUSTER_SIZE, write_time,
 	    c * VEX_WRITE_CLUSTER_SIZE / write_time);
     putchar('\n');
+
+    pic_return_to_user_code(pic);
     return RCT_OK;
+}
+
+
+rct_status_t    vex_status(rct_pic_t *pic)
+
+{
+    rct_status_t    status;
+    
+    vex_set_program_mode(pic);
+    status = pic_print_bootloader_version(pic);
+    pic_return_to_user_code(pic);
+    
+    return status;
 }
 
 
@@ -162,22 +179,24 @@ int     vex_valid_program_range(unsigned long start_address,
 }
 
 
-void    deassert_pin(int fd,int pin_mask)
+void    rs232_high(int fd,int pin_mask)
 
 {
     int     state;
     
+    /* RS232 uses negative logic: Set state bit to 0 to set the line to 1. */
     ioctl(fd, TIOCMGET, &state);
     state &= ~pin_mask;
     ioctl(fd, TIOCMSET, &state);
 }
 
 
-void    assert_pin(int fd,int pin_mask)
+void    rs232_low(int fd,int pin_mask)
 
 {
     int     state;
     
+    /* RS232 uses negative logic: Set state bit to 1 to set the line to 0. */
     ioctl(fd, TIOCMGET, &state);
     state |= pin_mask;
     ioctl(fd, TIOCMSET, &state);
@@ -197,76 +216,77 @@ time_t  difftimeofday(
 void    vex_set_program_mode(rct_pic_t *pic)
 
 {
+#if 1
+    puts("Make sure the VEX controller is turned on.");
+    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
+    puts("Then press return...");
+    getchar();
+#else
     struct timeval  assert1,
 		    deassert1,
 		    assert2,
 		    deassert2,
 		    assert3,
 		    deassert3;
+    char    buff[2] = "\377";
+
     /*
      *  Using usleep() like this runs a risk of drifting from the
      *  desired times, but it's probably close enough.  The alternative
      *  is to watch the timer using getitimer() or gettimeofday().
      *
-     *  Note: RS232 uses negative logic: +5v = 0, 0v = 1
+     *  Note: RS232 uses negative logic: assert -> low, deassert -> high
      */
 
-    /* 
-     *  Start both RTS and DTR in a low state for an arbitrary period.
-     *  0.1 seconds is not enough.  This caused FreeBSD 7.0 to fail
-     *  sometimes.
+    /*
+     *  New approach
      */
-    assert_pin(pic->fd, TIOCM_DTR);
-    assert_pin(pic->fd, TIOCM_RTS);
+
+    //puts("Dropping RTS and CTS...");
+    /* Everything low except TD before beginning the prog init sequence */
+    //rs232_low(pic->fd, TIOCM_LE);
+    //rs232_low(pic->fd, TIOCM_DTR);
+    //rs232_low(pic->fd, TIOCM_DSR);
+    rs232_low(pic->fd, TIOCM_RTS|TIOCM_CTS);
+    //rs232_high(pic->fd, TIOCM_ST);    /* Is this the same as TD? */
+    //rs232_low(pic->fd, TIOCM_SR);      /* Is this the same as RD? */
+    //rs232_low(pic->fd, TIOCM_DCD);
+    //rs232_low(pic->fd, TIOCM_RI);
+    //getchar();
+    
+    
     usleep(250000);
     
-    gettimeofday(&assert1,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
-    //usleep(8000);
-    usleep(7000);
-    deassert_pin(pic->fd, TIOCM_RTS);
-    //usleep(156000);
-    usleep(150000);
+    /* Raise TD? */
+    // Causes auto-trigger to work the second time after a reboot of
+    // the controller.  The first try just hangs
+    // write(pic->fd, buff, 1);
+    
+    usleep(250000);
+    
+    //puts("Raising RTS and CTS...");
+    /* Begin sequence by raising RTS and CTS at the same time */
+    rs232_high(pic->fd, TIOCM_RTS|TIOCM_CTS);
+    //rs232_high(pic->fd, TIOCM_CTS);
+    //getchar();
 
-    gettimeofday(&deassert1,NULL);
-    assert_pin(pic->fd, TIOCM_DTR);
-    //usleep(3000);
-    usleep(2000);
-    assert_pin(pic->fd, TIOCM_RTS);
-    //usleep(507000);
-    usleep(500000);
+    /* Read ack from controller? */
     
-    gettimeofday(&assert2,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
-    //usleep(10000);
-    usleep(9000);
-    deassert_pin(pic->fd, TIOCM_RTS);
-    //usleep(262000);
-    usleep(260000);
+    /* Drop RTS */
+    usleep(25000);
+    rs232_low(pic->fd, TIOCM_RTS);
     
-    gettimeofday(&deassert2,NULL);
-    assert_pin(pic->fd, TIOCM_DTR);
-    //usleep(3000);
-    usleep(2000);
-    assert_pin(pic->fd, TIOCM_RTS);
-    //usleep(507000);
-    usleep(500000);
+    /* Drop CTS */
+    usleep(25000);
+    rs232_low(pic->fd, TIOCM_CTS);
     
-    gettimeofday(&assert3,NULL);
-    deassert_pin(pic->fd, TIOCM_DTR);
-    //usleep(10000);
-    usleep(9000);
-    deassert_pin(pic->fd, TIOCM_RTS);
-    //usleep(25000);
-    usleep(24000);
+    /* Drop TD */
+    // rs232_low(pic->fd, TIOCM_ST);  /* Is this the same as TD? */
     
-    gettimeofday(&deassert3,NULL);
-    assert_pin(pic->fd, TIOCM_RTS);
-    //usleep(3000);
-    usleep(2000);
-    assert_pin(pic->fd, TIOCM_DTR);
-    usleep(20000); 
-    
+    usleep(250000);
+#endif
+
+#if 0
     printf("%u %lu %lu %lu %lu %lu\n",
 	0,
        (unsigned long)difftimeofday(&deassert1,&assert1),
@@ -274,6 +294,7 @@ void    vex_set_program_mode(rct_pic_t *pic)
        (unsigned long)difftimeofday(&deassert2,&assert1),
        (unsigned long)difftimeofday(&assert3,&assert1),
        (unsigned long)difftimeofday(&deassert3,&assert1));
+#endif
 }
 
 
@@ -282,29 +303,9 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
 {
     int     status;
 
-    puts("Make sure the VEX controller is turned on.");
-    puts("Press the button on the programming module until the PGRM STATUS button flashes.");
-    puts("Then press return...");
-    getchar();
-
     if ( (status = pic_open_controller(pic,device)) != RCT_OK )
 	return status;
 
-    /* Vex uses 115200 bits/sec, no parity, 8 data bits, 1 stop bit */
-    cfsetispeed(&pic->current_port_settings, PIC_BAUD_RATE);
-    cfsetospeed(&pic->current_port_settings, PIC_BAUD_RATE);
-    pic->current_port_settings.c_cflag |= CS8|CLOCAL|CREAD;
-    pic->current_port_settings.c_iflag |= IGNPAR;
-    if ( tcsetattr(pic->fd, TCSANOW, &pic->current_port_settings) != 0 )
-    {
-	fprintf(stderr, "%s: tcsetattr() failed: %s\n",
-	    __func__, strerror(errno));
-	exit(EX_OSERR);
-    }
-
-    // Not yet working reliably or at all on some platforms.
-    // vex_set_program_mode(pic);
-    
     /* close() on Mac and Linux (but not FreeBSD) sends the VEX
        into programming mode, as if the dongle button had been pressed.
        Causes FreeBSD 8.0 to fail unless --debug is used.  OK on
@@ -312,9 +313,8 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
 
 #ifndef __FreeBSD__
-    deassert_pin(pic->fd,TIOCM_RTS);
+    //rs232_high(pic->fd,TIOCM_CTS);
 #endif
-    //deassert_pin(pic->fd,TIOCM_DTR);
     
     /*
      *  Discard leftover characters buffered by the serial driver or
@@ -323,8 +323,12 @@ rct_status_t    vex_open_controller(rct_pic_t *pic, char *device)
      */
     
     /* Delay required on FreeBSD after opening port */
-    usleep(10000);
+    usleep(100000);
     
+    /*
+     *  Might be input in the buffer from a previous upload or monitor
+     *  that was unceremoniously disconnected.
+     */
     serial_eat_leftovers(pic->fd);
     
     return RCT_OK;
@@ -339,6 +343,10 @@ void    vex_close_controller(rct_pic_t *pic)
      *  vexctl command.  Should do this at startup as well.
      */
     serial_eat_leftovers(pic->fd);
+    
+    /* Make sure RTS and CTS are down? */
+    //rs232_high(pic->fd, TIOCM_CTS);
+    //rs232_low(pic->fd, TIOCM_RTS);
     
     // There might be something else we need to do here.  Stay tuned...
     pic_close_controller(pic);

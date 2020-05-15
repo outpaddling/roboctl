@@ -1,4 +1,8 @@
 
+Close and reopen port prior to monitoring?
+
+Close controller properly on disconnect or kill
+
 Make debian install script shell-indepndent
 
 Standardize char strings:
