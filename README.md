@@ -1,36 +1,29 @@
+RoboCTL
+=======
 
-This is Roboctl, a suite of communication tools for Robotics controllers.
-Author: Jason W. Bacon
-Created: Nov 2007
-Supported controllers:
-    Lego NXT
-    Vex
+RoboCTL is a suite of communication tools for Robotics controllers currently
+supporting Lego and Vex PIC-base controllers.
 
-========================================================================
 Installation
 ========================================================================
 
 FreeBSD
 -------
-Install from ports:
-    cd /usr/ports/devel/roboctl[-devel]
-    make install
-
-
-Mac
----
-Install from MacPorts:
-    port install roboctl[-devel]
-
+    pkg install roboctl
 
 Pkgsrc or pkgsrc-wip
 --------------------
+If your system provides binary packages (e.g. NetBSD):
+
+    pkgin install roboctl
+
+All other Unix-like systems:
+
     cd devel/roboctl
     make install (bmake install on non-BSD systems)
 
-
-Other
------
+Installing manually
+-------------------
 You will need the following tools:
 
     make (tested with BSD and GNU)
@@ -45,7 +38,6 @@ compiling roboctl, such as:
     libusb-dev, libbluetooth-dev, bluez-utils
 
 
-========================================================================
 General build instructions
 ========================================================================
 
@@ -72,7 +64,6 @@ If you've installed prerequisites from Fink:
 
     make PREFIX=/sw
 
-========================================================================
 Communication ports
 ========================================================================
 
@@ -82,12 +73,8 @@ device(s) to which the controller is connected.
 Run "man legoctl", "man vexctl", or "man roboctl" after installing
 for more information.
 
-========================================================================
 Notes
 ========================================================================
 
 This software is developed on FreeBSD and Mac OS X.  Porting to other
 POSIX platforms with a working libusb should not be difficult.
-
-Please send bug reports and patches to: jwbacon@tds.net
-
