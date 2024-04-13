@@ -36,9 +36,9 @@ OBJS    = ${OBJS1}
 #####################################
 # Compile, link, and install options
 
-PREFIX          ?= /usr/local
-LOCALBASE       ?= /usr/local
-MANPREFIX       ?= /usr/local
+PREFIX          ?= ../local
+LOCALBASE       ?= ${PREFIX}
+MANPREFIX       ?= ${PREFIX}
 
 CC      ?= cc
 INCLUDES?= -I. -I${LOCALBASE}/include
@@ -104,22 +104,14 @@ dox:
 	doxygen
 
 install: all
-	mkdir -p ${PREFIX}/bin ${PREFIX}/lib ${PREFIX}/include/roboctl ${MANPREFIX}/man/man3
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib \
+		${DESTDIR}${PREFIX}/include/roboctl ${MANPREFIX}/man/man3
 	@for file in ${HEADERS}; do \
-		${INSTALL} -c -m 0444 $${file} ${PREFIX}/include/roboctl; \
+		${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/include/roboctl; \
 	done
 	@for file in ${LIBS}; do \
-		${INSTALL} -c -m 0444 $${file} ${PREFIX}/lib; \
+		${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/lib; \
 	done
 	@for file in ${MAN3}; do \
 		${INSTALL} -c -m 0444 Dox/man/man3/$${file} ${MANPREFIX}/man/man3; \
-	done
-
-uninstall:
-	${RM} -rf ${PREFIX}/include/roboctl
-	@for file in ${LIBS}; do \
-		${RM} ${PREFIX}/lib/$${file}; \
-	done
-	@for file in ${MAN3}; do \
-		${RM} ${MANPREFIX}/man/man3/$${file}; \
 	done

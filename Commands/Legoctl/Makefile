@@ -33,9 +33,9 @@ OBJS    = ${OBJS1}
 #####################################
 # Compile, link, and install options
 
-PREFIX          ?= /usr/local
-LOCALBASE       ?= /usr/local
-MANPREFIX       ?= /usr/local
+PREFIX          ?= ../local
+MANPREFIX       ?= ${PREFIX}
+LOCALBASE       ?= ${PREFIX}
 
 CC      ?= cc
 CFLAGS  ?= -O -pipe
@@ -97,18 +97,10 @@ realclean: clean
 	rm -f .*.bak *.bak *.BAK
 
 install: all
-	mkdir -p ${PREFIX}/bin ${PREFIX}/lib ${PREFIX}/include ${MANPREFIX}/man/man1
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib ${DESTDIR}${PREFIX}/include ${MANPREFIX}/man/man1
 	@for file in ${BINS}; do \
-		${INSTALL} -s -c -m 0555 $${file} ${PREFIX}/bin; \
+		${INSTALL} -s -c -m 0555 $${file} ${DESTDIR}${PREFIX}/bin; \
 	done
 	@for file in ${MANS}; do \
 		${INSTALL} -c -m 0444 $${file} ${MANPREFIX}/man/man1; \
-	done
-
-uninstall:
-	@for file in ${BINS}; do \
-		${RM} ${PREFIX}/bin/$${file}; \
-	done
-	@for file in ${MANS}; do \
-		${RM} ${MANPREFIX}/man/man1/$${file}; \
 	done

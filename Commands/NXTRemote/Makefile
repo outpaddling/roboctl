@@ -1,5 +1,8 @@
 
-LOCALBASE   ?= /usr/local
+PREFIX      ?= ../local
+MANPREFIX   ?= ${PREFIX}
+LOCALBASE   ?= ${PREFIX}
+
 RM          ?= rm
 INSTALL     ?= install
 BIN         = nxtremote
@@ -32,10 +35,5 @@ realclean: clean
 	rm -f .*.bak *.bak *.BAK
 
 install: nxtremote
-	${INSTALL} -c nxtremote ${PREFIX}/bin
-	${INSTALL} -c nxtremote.1 ${PREFIX}/man/man1
-
-uninstall:
-	${RM} ${PREFIX}/bin/nxtremote
-	${RM} ${PREFIX}/man/man1/nxtremote.1
-
+	${INSTALL} -c nxtremote ${DESTDIR}${PREFIX}/bin
+	${INSTALL} -c nxtremote.1 ${DESTDIR}${MANPREFIX}/man/man1

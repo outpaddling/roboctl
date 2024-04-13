@@ -3,6 +3,7 @@
 # make [PREFIX=your-install prefix]
 
 MAKE    ?= make
+BIN     = legoctl   # Arbitrary, for APE
 
 all:    liblego legoctl vexctl
 

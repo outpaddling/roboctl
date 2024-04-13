@@ -35,7 +35,9 @@ OBJS    = ${OBJS1} ${OBJS2}
 #####################################
 # Compile, link, and install options
 
-PREFIX  ?= /usr/local
+PREFIX      ?= ../local
+MANPREFIX   ?= ${PREFIX}
+LOCALBASE   ?= ${PREFIX}
 
 CC      ?= cc
 CFLAGS  ?= -O -pipe
@@ -74,10 +76,11 @@ realclean: clean
 	rm -f .*.bak *.bak *.BAK
 
 install: all
-	mkdir -p ${PREFIX}/bin ${PREFIX}/lib ${PREFIX}/include ${PREFIX}/man/man1
-	${INSTALL} -s -c -m 0555 ${BINS} ${PREFIX}/bin
-#       ${INSTALL} -c -m 0555 ${SCRIPTS} ${PREFIX}/bin
-#       ${INSTALL} -c -m 0444 ${HEADERS} ${PREFIX}/include
-#       ${INSTALL} -c -m 0444 ${LIBS} ${PREFIX}/lib
-	${INSTALL} -c -m 0444 ${MANS} ${PREFIX}/man/man1
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib \
+		${DESTDIR}${PREFIX}/include ${DESTDIR}${MANPREFIX}/man/man1
+	${INSTALL} -s -c -m 0555 ${BINS} ${DESTDIR}${PREFIX}/bin
+#       ${INSTALL} -c -m 0555 ${SCRIPTS} ${DESTDIR}${PREFIX}/bin
+#       ${INSTALL} -c -m 0444 ${HEADERS} ${DESTDIR}${PREFIX}/include
+#       ${INSTALL} -c -m 0444 ${LIBS} ${DESTDIR}${PREFIX}/lib
+	${INSTALL} -c -m 0444 ${MANS} ${DESTDIR}${MANPREFIX}/man/man1
 

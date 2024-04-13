@@ -22,7 +22,7 @@
 #
 # They can also inheret values from parent Makefiles (as in *BSD ports).
 # This allows different systems to use the Makefile without modifications.
-# For example, MacPorts installs to /opt/local instead of /usr/local,
+# For example, MacPorts installs to /opt/local instead of ../local,
 # and hence might use the following:
 # 
 #       make PREFIX=/opt/local 
@@ -59,14 +59,14 @@ OBJS    = ${OBJS1}
 # Override from the command line with "make VAR=value"
 # or by setting in the parent Makefile.
 
-# Install in /usr/local, unless defined by the parent Makefile, the
+# Install in ../local, unless defined by the parent Makefile, the
 # environment, or a command line option such as PREFIX=/opt/local.
-PREFIX  ?= /usr/local
-MANPREFIX ?= ${PREFIX}
+PREFIX      ?= ../local
+MANPREFIX   ?= ${PREFIX}
 
 # Where to find local libraries and headers.  For MacPorts, override
 # with LOCALBASE=/opt/local.
-LOCALBASE ?= /usr/local
+LOCALBASE   ?= ${PREFIX}
 
 ############################################################################
 # Build flags
@@ -144,19 +144,19 @@ realclean: clean
 # Install all target files (binaries, libraries, docs, etc.)
 
 install: all
-	mkdir -p ${PREFIX}/bin ${PREFIX}/lib ${PREFIX}/include \
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib ${DESTDIR}${PREFIX}/include \
 		${MANPREFIX}/man/man1
 	@for file in ${BINS} ; do \
-	    ${INSTALL} -s -c -m 0555 $${file} ${PREFIX}/bin; \
+	    ${INSTALL} -s -c -m 0555 $${file} ${DESTDIR}${PREFIX}/bin; \
 	done
 	@for file in ${SCRIPTS} ; do \
-	    ${INSTALL} -c -m 0555 $${file} ${PREFIX}/bin; \
+	    ${INSTALL} -c -m 0555 $${file} ${DESTDIR}${PREFIX}/bin; \
 	done
 	@for file in ${HEADERS} ; do \
-	    ${INSTALL} -c -m 0444 $${file} ${PREFIX}/include; \
+	    ${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/include; \
 	done
 	@for file in ${LIBS} ; do \
-	    ${INSTALL} -c -m 0444 $${file} ${PREFIX}/lib; \
+	    ${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/lib; \
 	done
 	@for file in ${MAN1} ; do \
 	    ${INSTALL} -c -m 0444 $${file} ${MANPREFIX}/man/man1; \
@@ -164,28 +164,3 @@ install: all
 	@for file in ${MAN3} ; do \
 	    ${INSTALL} -c -m 0444 $${file} ${MANPREFIX}/man/man3; \
 	done
-
-
-############################################################################
-# Remove all installed files
-
-uninstall:
-	@for file in ${BINS} ; do \
-	    ${RM} ${PREFIX}/bin/$${file}; \
-	done
-	@for file in ${SCRIPTS} ; do \
-	    ${RM} ${PREFIX}/bin/$${file}; \
-	done
-	@for file in ${HEADERS} ; do \
-	    ${RM} ${PREFIX}/include/$${file}; \
-	done
-	@for file in ${LIBS} ; do \
-	    ${RM} ${PREFIX}/lib/$${file}; \
-	done
-	@for file in ${MAN1} ; do \
-	    ${RM} ${MANPREFIX}/man/man1/$${file}; \
-	done
-	@for file in ${MAN3} ; do \
-	    ${RM} ${MANPREFIX}/man/man3/$${file}; \
-	done
-
