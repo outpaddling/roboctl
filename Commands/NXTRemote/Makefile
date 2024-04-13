@@ -1,12 +1,13 @@
 
+BIN         = nxtremote
+OBJS        = nxtremote.o arcade_drive.o
+
 PREFIX      ?= ../local
 MANPREFIX   ?= ${PREFIX}
 LOCALBASE   ?= ${PREFIX}
 
 RM          ?= rm
 INSTALL     ?= install
-BIN         = nxtremote
-OBJS        = nxtremote.o arcade_drive.o
 CC          ?= gcc
 CFLAGS      ?= -Wall -g
 INCLUDES    ?= -I../../Libs/C -I${LOCALBASE}/include/roboctl -I${LOCALBASE}/include

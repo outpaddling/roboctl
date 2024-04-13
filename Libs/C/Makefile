@@ -105,7 +105,7 @@ dox:
 
 install: all
 	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib \
-		${DESTDIR}${PREFIX}/include/roboctl ${MANPREFIX}/man/man3
+		${DESTDIR}${PREFIX}/include/roboctl ${DESTDIR}${MANPREFIX}/man/man3
 	@for file in ${HEADERS}; do \
 		${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/include/roboctl; \
 	done
@@ -113,5 +113,6 @@ install: all
 		${INSTALL} -c -m 0444 $${file} ${DESTDIR}${PREFIX}/lib; \
 	done
 	@for file in ${MAN3}; do \
-		${INSTALL} -c -m 0444 Dox/man/man3/$${file} ${MANPREFIX}/man/man3; \
+		${INSTALL} -c -m 0444 Dox/man/man3/$${file} \
+			    ${DESTDIR}${MANPREFIX}/man/man3; \
 	done

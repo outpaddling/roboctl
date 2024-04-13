@@ -97,10 +97,11 @@ realclean: clean
 	rm -f .*.bak *.bak *.BAK
 
 install: all
-	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib ${DESTDIR}${PREFIX}/include ${MANPREFIX}/man/man1
-	@for file in ${BINS}; do \
+	mkdir -p ${DESTDIR}${PREFIX}/bin ${DESTDIR}${PREFIX}/lib \
+		 ${DESTDIR}${PREFIX}/include ${DESTDIR}${MANPREFIX}/man/man1
+	for file in ${BINS}; do \
 		${INSTALL} -s -c -m 0555 $${file} ${DESTDIR}${PREFIX}/bin; \
 	done
-	@for file in ${MANS}; do \
-		${INSTALL} -c -m 0444 $${file} ${MANPREFIX}/man/man1; \
+	for file in ${MANS}; do \
+		${INSTALL} -c -m 0444 $${file} ${DESTDIR}${MANPREFIX}/man/man1; \
 	done

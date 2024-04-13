@@ -36,6 +36,9 @@ rcx.o: rcx.c roboctl.h rct_machdep.h rct_rcx.h rct_nxt.h rct_nxt_output.h \
   rct_pic.h rct_protos.h
 	${CC} -c ${CFLAGS} rcx.c
 
+strings.o: strings.c
+	${CC} -c ${CFLAGS} strings.c
+
 usb.o: usb.c
 	${CC} -c ${CFLAGS} usb.c
 
