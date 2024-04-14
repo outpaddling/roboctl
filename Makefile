@@ -39,9 +39,3 @@ install: all
 	(cd Libs/C; ${MAKE} install)
 	(cd Commands/Legoctl; ${MAKE} install)
 	(cd Commands/Vexctl; ${MAKE} install)
-
-uninstall:
-	(cd Libs/C; ${MAKE} uninstall)
-	(cd Commands/Legoctl; ${MAKE} uninstall)
-	(cd Commands/Vexctl; ${MAKE} uninstall)
-
